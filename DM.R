@@ -58,7 +58,6 @@ manualDM=function(roads,car,packages) {
 }
 
 heuristic_estimate_of_distance = function(x1, y1, x2, y2, roads) {
-  
   # minimum = 10000
   startx = x1
   starty = y1
@@ -67,38 +66,38 @@ heuristic_estimate_of_distance = function(x1, y1, x2, y2, roads) {
   minHroad = 0;
   minVroad = 0;
   distance = abs(x1 - x2) + abs(y1 - y2)
-  # if (x1 > x2) {
-  #   startx = x2
-  #   endx = x1
-  # }
-  # if (y1 > y2) {
-  #   starty = y2
-  #   endy = y1
-  # }
-  # 
-  # if(startx < endx)
-  # {
-  #   minHroad = min(roads$hroads[startx:endx-1, starty:endy])
-  # }
-  # if(starty < endy)
-  # {
-  #   minVroad = min(roads$vroads[startx:endx, starty:endy-1])
-  # }
-  # if(minHroad != 0 && minVroad != 0)
-  # {
-  #   minimum = min(minHroad, minVroad)
-  #   distance = minimum * distance
-  # }
-  # else if(minHroad != 0)
-  # {
-  #   distance = minHroad * distance
-  # }
-  # else if(minVroad != 0)
-  # {
-  #   distance = minVroad * distance
-  # }
+  if (x1 > x2) {
+    startx = x2
+    endx = x1
+  }
+  if (y1 > y2) {
+    starty = y2
+    endy = y1
+  }
+
+  if(startx < endx)
+  {
+    minHroad = min(roads$hroads[startx:endx-1, starty:endy])
+  }
+  if(starty < endy)
+  {
+    minVroad = min(roads$vroads[startx:endx, starty:endy-1])
+  }
+  if(minHroad != 0 && minVroad != 0)
+  {
+    minimum = min(minHroad, minVroad)
+    distance = minimum * distance
+  }
+  else if(minHroad != 0)
+  {
+    distance = minHroad * distance
+  }
+  else if(minVroad != 0)
+  {
+    distance = minVroad * distance
+  }
   
-  return (distance*1.5)
+  return (distance)
 }
 
 
@@ -115,6 +114,7 @@ aStar = function(x1, y1, x2, y2, roads,car) {
   h_score[x1,y1] = heuristic_estimate_of_distance(x1, y1, x2, y2, roads)
   f_score[x1,y1] = g_score[x1,y1] + h_score[x1,y1]
   path=list()
+  
   
   emptyOpenset = length(which(openset == 1))
   i =0
@@ -140,8 +140,11 @@ aStar = function(x1, y1, x2, y2, roads,car) {
       return (list(nextNode = secondNode, fscore=f_score[x,y]))
     }
     
+    
+    
     openset[x,y] = 0
     closedset[x,y] = 1
+  
     
     # right
     if (x + 1 <= dim) {
@@ -262,59 +265,91 @@ aStar = function(x1, y1, x2, y2, roads,car) {
   return (FALSE)
 }
 
-nearestPackage = function(roads, car, packages) {
-  if (car$load==0) {
-    if(length(car$mem)==0)
-    {
-      offset = 0;
-      undelivedPakages=which(packages[,5]==0);
-      distances = abs(packages[undelivedPakages,1+offset]-car$x)+abs(packages[undelivedPakages,2+offset]-car$y);
-      minDistance=which.min(distances);
-      toGo= undelivedPakages[minDistance];
-      car$mem$package = toGo
-      car$mem$offset = 0
-
-    }
-  } else {
-    if(length(car$mem)==0)
-    {
-      car$mem$package=car$load
-      car$mem$offset=2
-      
+aStarForPackage = function(car, packages,roads) {
+  openset=list()
+  closeSet =list()
+  currentNode ="0"
+  fscore=list()
+  openset[[currentNode]]=currentNode
+  fscore[[currentNode]] = 0
+  emptyOpenset = length(openset)
+  undelivedPakages=which(packages[,5]==0);
+  totalNumbers = length(undelivedPakages)
+  singleScore=list()
+  
+  
+  while (emptyOpenset > 0) {
+    fscoreToVector = sapply(fscore, function(node)node)
+    minNode = names(which.min(fscoreToVector))
+    
+    if(nchar(minNode)==length(undelivedPakages)+1) {
+      num=as.numeric(minNode)
+      last = num/(10^(totalNumbers-1))
+      return (floor(last))
     }
     
-  }
-  return (car)
-}
-
-astarPackage = function(roads, car, packages)
-{
-  
-  if (car$load==0) {
-    undelivedPakages=which(packages[,5]==0);
-    minCost = 10000
-    minPackage = 0
-    if(length(undelivedPakages) > 1)
+    currentCost =  fscore[[minNode]] 
+    fscore[[minNode]] = NULL
+    openset[[minNode]] = NULL
+    closeSet[[minNode]] = minNode
+    
+    nodeLength = nchar(minNode)
+    lastPackage = substr(minNode, nodeLength, nodeLength)
+    x1 = 0
+    y1 =0
+    if(lastPackage == "0")
     {
-      for(i in undelivedPakages)
-      {
-        a = packages[i,]
-        
-        cost = aStar(car$x, car$y, packages[i,1], packages[i,2], roads,car)
-        if(cost$fscore < minCost)
-        {
-          minCost = cost$fscore
-          minPackage = i
-        }
-      }
+      x1 = car$x
+      y1 =car$y
     }
     else
     {
-      minPackage = undelivedPakages[1]
+      x1 = packages[as.numeric(lastPackage),3]
+      y1 = packages[as.numeric(lastPackage),4]
     }
     
-    car$mem$package = minPackage
+    for(i in undelivedPakages)
+    {
+      if(grepl(as.character(i), minNode))
+      {
+        next
+      }
+      
+      neighborNode = paste(minNode, as.character(i), sep="")
+      if(!is.null(closeSet[[neighborNode]]))
+      {
+        next
+      }
+    
+      x2 = packages[i,1]
+      y2 = packages[i,2]
+      newNode= paste(lastPackage,as.character(i),sep="")
+      fcost = 0
+      if(is.null(singleScore[[newNode]]))
+      {
+        fcost = aStar(x1,y1,x2,y2, roads, car)
+        singleScore[[newNode]] = fcost
+      }
+      else
+      {
+        fcost = singleScore[[newNode]]
+      }
+      openset[[neighborNode]] = neighborNode
+      fscore[[neighborNode]] = currentCost + fcost$fscore
+    }
+   
+    emptyOpenset = length(openset)
+  }
+  return (FALSE)
+}
+
+
+astarAllPackage = function(roads, car, packages) {
+  if (car$load==0) {
+    package = aStarForPackage(car, packages,roads)
+    car$mem$package = package
     car$mem$offset = 0
+    
   }
   else
   {
@@ -325,14 +360,14 @@ astarPackage = function(roads, car, packages)
   return (car)
 }
 
-astarDM = function(roads, car, packages) {
+myFunction = function(roads, car, packages) {
   nextMove=0
   toGo=0
   offset=0
-  car = astarPackage(roads, car, packages)
+  car = astarAllPackage(roads, car, packages)
   toGo = car$mem$package
   offset = car$mem$offset
-  
+
   x2 = packages[toGo, offset + 1]
   y2= packages[toGo, offset + 2]
   
@@ -349,25 +384,33 @@ astarDM = function(roads, car, packages) {
   path = nextPath$nextNode
   x= floor((path-1) / 10) + 1
   y= (path - 1) %% 10 + 1
+  #2 down, 4 left, 6 right, 8 up, 5 stay still
+  
+  bottleNeck = 4
   if (car$x == x && car$y != y) {
     if(car$y < y) {
-      nextMove = 8
+        nextMove = 8
     }
     else if(car$y > y) {
-      nextMove = 2
+        nextMove = 2
+      
     }
   }
   else if(car$y == y && car$x != x) {
     if(car$x < x) {
-      nextMove = 6
+      
+        nextMove = 6
     }
     else if(car$x > x) {
-      nextMove = 4
+
+        nextMove = 4
     }
   }
   else
   {
     nextMove = 5;
+    print(car$x, car$y, x,y)
+    print("................")
   }
   car$nextMove=nextMove
   if(x == x2 && y ==y2)
@@ -420,12 +463,11 @@ testDM=function(myFunction,verbose=0,returnVec=FALSE,n=500,seed=21,timeLimit=250
     set.seed(s)
     if (verbose==2)
     {
-      if(a > 300)
-      {
       cat("\nNew game, seed",s)
-      }
     }
-    runDeliveryMan(myFunction,doPlot=F,pause=0,verbose=verbose==2)
+    steps = runDeliveryMan(myFunction,doPlot=F,pause=0,verbose=verbose==2)
+    return (steps)
+    
   })
   endTime=Sys.time()
   if (verbose>=1){
@@ -475,6 +517,7 @@ testDM=function(myFunction,verbose=0,returnVec=FALSE,n=500,seed=21,timeLimit=250
 #' @export
 runDeliveryMan <- function (carReady=manualDM,dim=10,turns=2000,
                             doPlot=T,pause=0.1,del=5,verbose=T) {
+ # set.seed(4611)
   roads=makeRoadMatrices(dim)
   car=list(x=1,y=1,wait=0,load=0,nextMove=NA,mem=list())
   packages=matrix(sample(1:dim,replace=T,5*del),ncol=5)
