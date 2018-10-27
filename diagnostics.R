@@ -275,45 +275,58 @@ diagnose = function(network, cases){
   
   diagMatrix = matrix(0, nrow=10, ncol=4)
   
-  randomNos=runif(10000, 0, 1)
+  sample_no = 1000
+  burn_no = 100
+  
+  randomNos=runif(40*sample_no, 0, 1)
+  randomIndex = 1
   
   
+  Pn=1
+  TB=0
+  LC=1
+  Br=0
   
   for(i in 1:rows)
   {
     samples = NULL
     case=cases[i,]
     
-    Pn=1
-    TB=0
-    LC=1
-    Br=0
+    
     
     case$Pn = Pn
     case$TB = TB
     case$LC = LC
     case$Br = Br
-    
-    for(j in 1:1000)
+    pOld = NULL
+    for(j in 1:sample_no)
     {
       for(unknowVar in unknowVars)
       {
         oldValue= case[[unknowVar]]
-        pOld = getProbability(model, case,network)
+        
+        if(is.null(pOld))
+        {
+          pOld = getProbability(model, case,network)
+        }
+        
         newValue= (oldValue+1)%%2
         case[[unknowVar]]=newValue
         pNew =  getProbability(model, case,network)
         if(pNew > pOld)
         {
           case[[unknowVar]]=newValue
+          pOld = pNew
         }
         else
         {
           prob = pNew / pOld
-          randomPro =randomNos[i*j]
+          randomPro =randomNos[randomIndex]
+          randomIndex = randomIndex + 1
           if(randomPro < prob)
           {
             case[[unknowVar]] = newValue
+            pOld = pNew
           }
           else
           {
@@ -329,10 +342,11 @@ diagnose = function(network, cases){
       samples=rbind(samples,case)
     }
     
+    randomSamples = sample(1:sample_no,burn_no)
     
-    burnSample = samples[101:1000,]
+    burnSample = samples[-randomSamples,]
     
-    totalNum = 900
+    totalNum = sample_no - burn_no
     l = subset(burnSample, Pn == 1, select=c(Pn))
     s2 = length(l[,1])
     Pn_T = s2 / totalNum
