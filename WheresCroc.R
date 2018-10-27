@@ -158,7 +158,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
   initial_state[1, gangerPostion] = 0
   for(i in 1:2)
   {
-    backpackerPosition =abs(positions[i])
+    backpackerPosition =positions[i]
     if(is.na(backpackerPosition ))
     {
       next
@@ -173,8 +173,8 @@ initialMatrix=function(positions, edges, moveInfo, reset){
     
     if(backpackerPosition < 0)
     {
-      initial_state = matrix(0, nrow=40, ncol=40)
-      initial_state[1, backpackerPosition] = 1
+      initial_state = matrix(0, ncol=40, nrow=1)
+      initial_state[1, abs(backpackerPosition)] = 1
     }
   }
   
