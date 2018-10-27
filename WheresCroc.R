@@ -106,7 +106,7 @@ Transition_matrix = function(moveInfo,readings,positions,edges,probs) {
     v = getOptions(i, edges)
     #print(v)
     l = length(v);
-    count = l+1
+    count = l
     p = 1 / count
     while(l > 0) {
       Transition[i, v[l]] = p
