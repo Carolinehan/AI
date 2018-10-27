@@ -87,17 +87,13 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     {
       moveInfo$moves = c(0, 0)
     }
-    else if(length(m) <2)
+    else if(length(m) <=2)
     {
-      moveInfo$moves = c(goal, 0)
-    }
-    else if(length(m) == 2)
-    {
-      moveInfo$moves = c(m[2], 0)
+      moveInfo$moves = c(m[1], 0)
     }
     else
     {
-      moveInfo$moves=c(m[2],m[3])
+      moveInfo$moves=c(m[1],m[2])
     }
   }
   moveInfo$mem$initia = normalizeF
@@ -196,16 +192,18 @@ AStar = function(current,edges,goal)
     fscoreToVector = sapply(fscore, function(node)node)
     minNode = names(which.min(fscoreToVector))
     minNodeValue = as.numeric(minNode)
+    currentRoute = route[[minNode]]
     
     if(minNodeValue== goal) {
-      return (route[[minNode]])
+      finalRoute= append(currentRoute, minNodeValue)[-1]
+      return (finalRoute)
     }
     
     currentCost =  fscore[[minNode]] 
     fscore[[minNode]] = NULL
     openset[[minNode]] = NULL
     closeSet[[minNode]] = minNodeValue
-    currentRoute = route[[minNode]]
+    
     
     neighbors =  getOptions(minNodeValue, edges)
     
