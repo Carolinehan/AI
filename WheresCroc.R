@@ -93,7 +93,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
     else
     {
-      if(orders[m[1]] <3)
+      if(orders[m[1]] <4)
       {
         moveInfo$moves = c(m[1], 0)
       }
@@ -148,11 +148,12 @@ observationFunction = function(moveInfo,readings,positions,edges,probs) {
 
 initialMatrix=function(positions, edges, moveInfo, reset){
   
-  if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
-    deadBackPackers =length(which(is.na(positions[2:3])))
-    count = 37 + deadBackPackers
+ if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
+    count = 38
     initial_state = matrix(1/count, ncol=40, nrow=1)
-  }
+    initial_state[1, positions[1:2]] = 0
+    return (initial_state)
+  } 
   else {
     initial_state = moveInfo$mem$initia
   }
@@ -176,8 +177,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
       next
     }
     
-    
-    if(!is.na(backpackerPosition) && backpackerPosition > 0)
+    if(backpackerPosition > 0)
     {
       initial_state[1, backpackerPosition] = 0
       next
@@ -196,7 +196,8 @@ initialMatrix=function(positions, edges, moveInfo, reset){
 huristic = function(normalizedF, node)
 {
   orders = abs(rank(normalizedF)-41)
-  #return (orders[node])
+  h_values = orders*(orders/40)/100
+  #return (h_values[node])
   return(1)
 }
 
@@ -379,7 +380,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
- # set.seed(19861)
+  #set.seed(22963)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
