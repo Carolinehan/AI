@@ -67,6 +67,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   maxo=which(o==max(o), arr.ind = T)
   nextT=initial_state %*% transtionMatrix
   f = initial_state %*% transtionMatrix * o
+  state_without_observation = initial_state %*% transtionMatrix
   normalizeF= f/rowSums(f)
   
   maxValue = max(normalizeF)
@@ -104,7 +105,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
       }
     }
   }
-  
+  moveInfo$mem$previous = state_without_observation
   moveInfo$mem$initia = normalizeF
   return(moveInfo)
 }
@@ -181,7 +182,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
     
     if(backpackerPosition > 0)
     {
-      initial_state[1, backpackerPosition] = 0
+      #initial_state[1, backpackerPosition] = 0
       next
     }
     
@@ -395,7 +396,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(4107)
+  #set.seed(7684)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
