@@ -71,7 +71,8 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   maxValue = max(normalizeF)
   m = which(normalizeF==maxValue,arr.ind=T)
   goal = m[1,2]
-  m = AStar(positions[3],edges, goal)
+  current_position = positions[3]
+  m = AStar(current_position,edges, goal)
   # print(positions[3])
   # print(m)
   # print(goal)
@@ -79,13 +80,13 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   
   if(length(which(positions==goal))>0 && initial_state[1, goal] == 0)
   {
-    moveInfo$moves = c(0, 0)
+    moveInfo$moves = c(current_position, 0)
   }
   else
   {
     if(length(m) ==0)
     {
-      moveInfo$moves = c(0, 0)
+      moveInfo$moves = c(current_position, 0)
     }
     else if(length(m) <2)
     {
@@ -150,6 +151,16 @@ initialMatrix=function(positions, edges, moveInfo, reset){
     initial_state = moveInfo$mem$initia
   }
   
+  if(!is.null(moveInfo$moves))
+  {
+    if(length(moveInfo$moves) == 2)
+    {
+      if(moveInfo$moves[2] == 0)
+      {
+        initial_state[1, moveInfo$moves[1]] = 0
+      }
+    }
+  }
 
   for(i in 1:2)
   {
@@ -282,7 +293,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
     hmm=c(hmm,res$move)
     if (verbose==2)
     {
-      if(res$move > 20)
+      if(res$move > 10)
       {
         cat("\nNew game, seed",s)
         cat("\n turns: ", res$move)
@@ -355,7 +366,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(3159)
+  #set.seed(19861)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
