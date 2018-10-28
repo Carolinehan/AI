@@ -74,7 +74,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   goal = m[1,2]
   current_position = positions[3]
   m = AStar(current_position,edges, goal,normalizeF)
-  
+ 
   orders = abs(rank(normalizeF)-41)
   #print(orders)
   
@@ -94,7 +94,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
     else
     {
-      if(orders[m[1]] <4)
+      if(orders[m[1]] <3)
       {
         moveInfo$moves = c(m[1], 0)
       }
@@ -197,13 +197,6 @@ initialMatrix=function(positions, edges, moveInfo, reset){
 
 huristic = function(normalizedF, node)
 {
-  orders = abs(rank(normalizedF)-41)
-  h_values = orders[node]
-  # if(h_values < 4)
-  # {
-  #   return (h_values/100)
-  # }
-  #return (h_values[node])
   return(0)
 }
 
@@ -211,15 +204,15 @@ cost = function(normalizedF, node)
 {
   orders = abs(rank(normalizedF)-41)
   h_values = orders[node]
-  if(h_values < 4)
+  if(h_values < 6)
   {
-    return (h_values/100)
+    return (h_values/10)
   }
   #return (h_values[node])
-  return(1)
+  return(0.6)
 }
 
-AStar = function(current,edges,goal, normalizedF)
+AStar = function(current,edges,goal,normalizedF)
 {
   openset=list()
   closeSet =list()
