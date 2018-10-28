@@ -152,7 +152,7 @@ observationFunction = function(moveInfo,readings,positions,edges,probs) {
 initialMatrix=function(positions, edges, moveInfo, reset){
   
  if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
-    count = 38
+    count = 40
     initial_state = matrix(1/count, ncol=40, nrow=1)
     initial_state[1, positions[1:2]] = 0
     return (initial_state)
@@ -182,14 +182,18 @@ initialMatrix=function(positions, edges, moveInfo, reset){
     
     if(backpackerPosition > 0)
     {
-      #initial_state[1, backpackerPosition] = 0
       next
     }
     
     if(backpackerPosition < 0)
     {
       initial_state = matrix(0, ncol=40, nrow=1)
-      initial_state[1, abs(backpackerPosition)] = 1
+      neighbors = getOptions(abs(backpackerPosition), edges)
+      len = length(neighbors)
+      for(neighbor in neighbors)
+      {
+        initial_state[1, neighbor] = 1/len
+      }
     }
   }
   
