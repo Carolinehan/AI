@@ -72,11 +72,10 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   m = which(normalizeF==maxValue,arr.ind=T)
   goal = m[1,2]
   current_position = positions[3]
-  m = AStar(current_position,edges, goal)
-  # print(positions[3])
-  # print(m)
-  # print(goal)
-  # print("---------------")
+  m = AStar(current_position,edges, goal,normalizeF)
+  
+  orders = abs(rank(normalizeF)-41)
+  #print(orders)
   
   if(length(which(positions==goal))>0 && initial_state[1, goal] == 0)
   {
@@ -94,7 +93,14 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
     else
     {
-      moveInfo$moves=c(m[1],m[2])
+      if(orders[m[1]] <3)
+      {
+        moveInfo$moves = c(m[1], 0)
+      }
+      else
+      {
+        moveInfo$moves=c(m[1],m[2])
+      }
     }
   }
   moveInfo$mem$initia = normalizeF
@@ -187,7 +193,14 @@ initialMatrix=function(positions, edges, moveInfo, reset){
   return (initial_state)
 }
 
-AStar = function(current,edges,goal)
+huristic = function(normalizedF, node)
+{
+  orders = abs(rank(normalizedF)-41)
+  #return (orders[node])
+  return(1)
+}
+
+AStar = function(current,edges,goal, normalizedF)
 {
   openset=list()
   closeSet =list()
@@ -228,14 +241,14 @@ AStar = function(current,edges,goal)
       
       if(is.null(fscore[[newNode]]))
       {
-        fscore[[newNode]] = currentCost + 1
+        fscore[[newNode]] = currentCost + huristic(normalizedF,i)
         route[[newNode]] = append(currentRoute, minNodeValue)
       }
       else
       {
         if((currentCost + 1) < fscore[[newNode]])
         {
-          fscore[[newNode]] = currentCost + 1
+          fscore[[newNode]] = currentCost + huristic(normalizedF,i)
           route[[newNode]] = append(currentRoute, minNodeValue)
         }
       }
@@ -366,7 +379,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(19861)
+ # set.seed(19861)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
