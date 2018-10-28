@@ -59,6 +59,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
   }
   
+  
   initial_state = initialMatrix(positions, edges, moveInfo, reset)
   transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs)
   o = observationFunction(moveInfo, readings, positions, edges, probs)
@@ -103,6 +104,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
       }
     }
   }
+  
   moveInfo$mem$initia = normalizeF
   return(moveInfo)
 }
@@ -196,7 +198,23 @@ initialMatrix=function(positions, edges, moveInfo, reset){
 huristic = function(normalizedF, node)
 {
   orders = abs(rank(normalizedF)-41)
-  h_values = orders*(orders/40)/100
+  h_values = orders[node]
+  # if(h_values < 4)
+  # {
+  #   return (h_values/100)
+  # }
+  #return (h_values[node])
+  return(0)
+}
+
+cost = function(normalizedF, node)
+{
+  orders = abs(rank(normalizedF)-41)
+  h_values = orders[node]
+  if(h_values < 4)
+  {
+    return (h_values/100)
+  }
   #return (h_values[node])
   return(1)
 }
@@ -208,8 +226,10 @@ AStar = function(current,edges,goal, normalizedF)
   route = list()
   currentNode =as.character(current)
   fscore=list()
+  gscore=list()
   openset[[currentNode]]=current
   fscore[[currentNode]] = 0
+  gscore[[currentNode]] = 0
   emptyOpenset = length(openset)
   
   while (emptyOpenset > 0) {
@@ -223,7 +243,7 @@ AStar = function(current,edges,goal, normalizedF)
       return (finalRoute)
     }
     
-    currentCost =  fscore[[minNode]] 
+    currentCost =  gscore[[minNode]] 
     fscore[[minNode]] = NULL
     openset[[minNode]] = NULL
     closeSet[[minNode]] = minNodeValue
@@ -242,14 +262,16 @@ AStar = function(current,edges,goal, normalizedF)
       
       if(is.null(fscore[[newNode]]))
       {
-        fscore[[newNode]] = currentCost + huristic(normalizedF,i)
+        gscore[[newNode]] = currentCost +cost(normalizedF,i)
+        fscore[[newNode]] = gscore[[newNode]] + huristic(normalizedF,i)
         route[[newNode]] = append(currentRoute, minNodeValue)
       }
       else
       {
         if((currentCost + 1) < fscore[[newNode]])
         {
-          fscore[[newNode]] = currentCost + huristic(normalizedF,i)
+          gscore[[newNode]] = currentCost +cost(normalizedF,i)
+          fscore[[newNode]] = gscore[[newNode]] + huristic(normalizedF,i)
           route[[newNode]] = append(currentRoute, minNodeValue)
         }
       }
@@ -380,7 +402,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(22963)
+  #set.seed(4107)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
