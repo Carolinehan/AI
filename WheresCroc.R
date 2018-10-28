@@ -154,7 +154,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
  if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
     count = 40
     initial_state = matrix(1/count, ncol=40, nrow=1)
-    initial_state[1, positions[1:2]] = 0
+    #initial_state[1, positions[1:2]] = 0
     return (initial_state)
   } 
   else {
