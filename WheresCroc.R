@@ -61,7 +61,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   
   
   initial_state = initialMatrix(positions, edges, moveInfo, reset)
-  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs)
+  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs, initial_state)
   o = observationFunction(moveInfo, readings, positions, edges, probs)
   
   maxo=which(o==max(o), arr.ind = T)
@@ -95,7 +95,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
     else
     {
-      if(orders[m[1]] <3)
+      if(orders[m[1]] <4)
       {
         moveInfo$moves = c(m[1], 0)
       }
@@ -110,12 +110,13 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   return(moveInfo)
 }
 
-Transition_matrix = function(moveInfo,readings,positions,edges,probs) {
+Transition_matrix = function(moveInfo,readings,positions,edges,probs, initial_matrix) {
   Transition = matrix(0, ncol=40, nrow=40)
   for(i in 1:40) {
+    
     v = getOptions(i, edges)
-    #print(v)
     l = length(v);
+    
     count = l
     p = 1 / count
     while(l > 0) {
@@ -154,7 +155,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
  if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
     count = 40
     initial_state = matrix(1/count, ncol=40, nrow=1)
-    #initial_state[1, positions[1:2]] = 0
+    initial_state[1, positions[1:3]] = 0
     return (initial_state)
   } 
   else {
@@ -400,7 +401,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(7684)
+  #set.seed(17859)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
