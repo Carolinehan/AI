@@ -266,6 +266,7 @@ learn = function(his) {
   return(probability)
 }
 
+
 diagnose = function(network, cases){
   probabilities = list()
   
@@ -291,9 +292,7 @@ diagnose = function(network, cases){
   {
     samples = NULL
     case=cases[i,]
-    
-    
-    
+
     case$Pn = Pn
     case$TB = TB
     case$LC = LC

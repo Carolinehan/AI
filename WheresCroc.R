@@ -87,7 +87,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     {
       moveInfo$moves = c(0, 0)
     }
-    else if(length(m) <=2)
+    else if(length(m) <2)
     {
       moveInfo$moves = c(m[1], 0)
     }
@@ -150,8 +150,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
     initial_state = moveInfo$mem$initia
   }
   
-  gangerPostion = positions[3]
-  initial_state[1, gangerPostion] = 0
+
   for(i in 1:2)
   {
     backpackerPosition =positions[i]
