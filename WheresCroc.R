@@ -61,7 +61,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   
   
   initial_state = initialMatrix(positions, edges, moveInfo, reset)
-  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs, initial_state)
+  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs)
   o = observationFunction(moveInfo, readings, positions, edges, probs)
   
   maxo=which(o==max(o), arr.ind = T)
@@ -75,7 +75,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   goal = m[1,2]
   current_position = positions[3]
   m = AStar(current_position,edges, goal,normalizeF)
- 
+  
   orders = abs(rank(normalizeF)-41)
   #print(orders)
   
@@ -87,15 +87,17 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   {
     if(length(m) ==0)
     {
-      moveInfo$moves = c(current_position, 0)
+      nextGoal = which(orders == 2)
+      m = AStar(current_position,edges, nextGoal,normalizeF)
+      moveInfo$moves = c(0, m[1])
     }
     else if(length(m) <2)
     {
-      moveInfo$moves = c(m[1], 0)
+        moveInfo$moves = c(m[1], 0)
     }
     else
     {
-      if(orders[m[1]] <4)
+      if(orders[m[1]] <3)
       {
         moveInfo$moves = c(m[1], 0)
       }
@@ -105,18 +107,17 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
       }
     }
   }
-  moveInfo$mem$previous = state_without_observation
+  moveInfo$mem$goal = goal
   moveInfo$mem$initia = normalizeF
   return(moveInfo)
 }
 
-Transition_matrix = function(moveInfo,readings,positions,edges,probs, initial_matrix) {
+Transition_matrix = function(moveInfo,readings,positions,edges,probs) {
   Transition = matrix(0, ncol=40, nrow=40)
   for(i in 1:40) {
-    
     v = getOptions(i, edges)
+    #print(v)
     l = length(v);
-    
     count = l
     p = 1 / count
     while(l > 0) {
@@ -152,7 +153,7 @@ observationFunction = function(moveInfo,readings,positions,edges,probs) {
 
 initialMatrix=function(positions, edges, moveInfo, reset){
   
- if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
+  if(is.null(moveInfo$mem) || is.null(moveInfo$mem$initia) || reset == T) {
     count = 40
     initial_state = matrix(1/count, ncol=40, nrow=1)
     initial_state[1, positions[1:3]] = 0
@@ -172,7 +173,7 @@ initialMatrix=function(positions, edges, moveInfo, reset){
       }
     }
   }
-
+  
   for(i in 1:2)
   {
     backpackerPosition =positions[i]
@@ -401,7 +402,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(17859)
+  #set.seed(10440)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
@@ -434,12 +435,12 @@ runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem
     }
     else
       first=F
-
+    
     if (doPlot)
       plotGameboard(points,edges,move,positions,showCroc)
-
+    
     Sys.sleep(pause)
-
+    
     readings=getReadings(positions[1],probs)
     moveInfo=makeMoves(moveInfo,readings,positions[2:4],edges,probs)
     if (length(moveInfo$moves)!=2) {
@@ -585,7 +586,7 @@ getEdges=function() {
   edges=rbind(edges,c(37,39))
   edges=rbind(edges,c(37,40))
   edges=rbind(edges,c(38,39))
-
+  
   return (edges)
 }
 
