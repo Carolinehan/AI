@@ -61,7 +61,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   
   
   initial_state = initialMatrix(positions, edges, moveInfo, reset)
-  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs)
+  transtionMatrix = Transition_matrix(moveInfo, readings, positions, edges, probs, initial_state)
   o = observationFunction(moveInfo, readings, positions, edges, probs)
   
   maxo=which(o==max(o), arr.ind = T)
@@ -112,7 +112,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
   return(moveInfo)
 }
 
-Transition_matrix = function(moveInfo,readings,positions,edges,probs) {
+Transition_matrix = function(moveInfo,readings,positions,edges,probs, initial_state) {
   Transition = matrix(0, ncol=40, nrow=40)
   for(i in 1:40) {
     v = getOptions(i, edges)
@@ -124,7 +124,6 @@ Transition_matrix = function(moveInfo,readings,positions,edges,probs) {
       Transition[i, v[l]] = p
       l = l - 1
     }
-    Transition[i,i]=p
   }
   
   return(Transition)
@@ -211,11 +210,11 @@ cost = function(normalizedF, node)
 {
   orders = abs(rank(normalizedF)-41)
   h_values = orders[node]
-  if(h_values < 6)
+  if(h_values < 4)
   {
-    return (h_values/10)
+   return (h_values/10)
   }
-  #return (h_values[node])
+
   return(0.6)
 }
 
@@ -402,7 +401,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' @return A string describing the outcome of the game.
 #' @export
 runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(10440)
+  #set.seed(17859)
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()
