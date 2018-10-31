@@ -196,7 +196,6 @@ runWW=function(
   maze=makeWobbiesWorld()
   control=learn(control=makeController(maze),verbose=verbose,doPlot=doPlot)$control
   control$doRand=FALSE
-  print(control)
   scrs=test(control)
   endTime=Sys.time()
   timeTaken=as.numeric(endTime)-as.numeric(startTime)
