@@ -1,63 +1,50 @@
 makeController=function(maze){
  
   decideAction=function(cont,maze_) {
-    actions = c(2,4,6,8)
-    old_position = maze_$wobbie[1]*10 +maze_$wobbie[2]
+    old_position =maze_$wobbie[1]*10 + maze_$wobbie[2]
     cont$old_position = old_position
+    cont$monster = maze_$monster1[1]*10+maze_$monster1[2]
+    
+    monster_index = as.character(cont$monster)
     if(cont$doRand)
     {
-      goal =  maze_$goal[1]*10 +maze_$goal[2]
       if(is.null(cont$q_table))
       {
-        q_table=NULL
-        rows = nrow(maze_$maze)
-        for(row_number in 1:rows)
-        {
-          position = maze_$maze[row_number,]
-          node = position[1]*10 + position[2]
-          if(node != goal)
-          {
-            for(action in actions)
-            {
-                q_value = 0
-                
-                if(is.null(q_table))
-                {
-                  q_table=matrix(c(0, node ,action,0,0), nrow=1, ncol=5)
-                }
-                else
-                {
-                  q_table=rbind(q_table, c(0, node ,action,0,0))
-                }
-            }
-          }
-          else
-          {
-            q_table=rbind(q_table, c(0, node ,action,0,1000))
-          }
-        }
-        q_table = as.vector(q_table)
-        q_table=matrix(q_table, ncol=5)
-        q_table=data.frame(q_table)
-        colnames(q_table)=c("VisitedCount","Wobbie","Action","Monster","Q")
-        cont$q_table = q_table
-        #print(q_table)
+        cont$q_table = list()
       }
     }
     
-    rand = runif(1,0, 1)
-    if(cont$doRand == F)
+    q_table = cont$q_table
+    
+    old_position_index = as.character(old_position)
+    
+    rand = runif(1, 0, 1)
+    
+    if(cont$doRand)
     {
-      q_table = cont$q_table
-      q_data = apply(q_table,1, function(e) e$Wobbie)
-      reward_row = which(q_data == old_position)
-      v_reward_index = which.max(q_table[reward_row,"Q"])
-      move = q_table[reward_row,"Action"][[v_reward_index]]
-    }
-    else
-    {    
       move = sample(c(2,4,6,8),1)
     }
+    else
+    {
+      move = 5
+    }
+
+    if(cont$doRand ==F || rand > 0.6)
+    {
+      if(!is.null(q_table[[old_position_index]]))
+      {
+        if(!is.null(q_table[[old_position_index]][[monster_index]]))
+        {
+          data_source = q_table[[old_position_index]][[monster_index]]
+          data = sapply(data_source, function(node)node["Q"])
+          max_index =  which.max(data)
+          node =names(data_source)[[max_index]]
+          move =as.numeric(node)
+        }
+      }
+    }
+    
+    
     list(move=move,control=cont)
   }
   
@@ -67,45 +54,88 @@ makeController=function(maze){
       discount = 1
       
       q_table = cont$q_table
-      old_position = cont$old_position
-      
-      
+      old_position =cont$old_position
       action = maze_$lastAction
       reward = maze_$reward
-      new_position = maze_$wobbie[1]*10 + maze_$wobbie[2]
+      new_position =maze_$wobbie[1]*10 + maze_$wobbie[2]
       monster = maze_$monster1[1]*10+maze_$monster1[2]
+      goal = maze_$goal[1]*10 + maze_$goal[2]
+      monster_index = as.character(monster)
+      old_monster = cont$monster
+      old_monster_index =as.character(old_monster)
       
-      q_data = apply(q_table,1, function(e) e$Wobbie*10 + e$Action)
-      current_value=old_position*10+action
-      current_row = which(q_data== current_value)
-      
-      q_data = apply(q_table,1, function(e) e$Wobbie)
-      reward_row = which(q_data == new_position)
+      cum_reward = 0
+      new_position_index = as.character(new_position)
+      if(!is.null(q_table[[new_position_index]]))
+      {
+        if(!is.null(q_table[[new_position_index]][[monster_index]]))
+        {
+          new_nodes = q_table[[new_position_index]][[monster_index]]
+          reward_data = sapply(new_nodes, function(node) node["Q"])
+          max_index = which.max(reward_data)
+          cum_reward = reward_data[[max_index]]
+        }
+      }
       
       example_q = reward
-      goal = maze_$goal[1]*10 + maze_$goal[2]
       
       if(new_position != goal && new_position != monster)
       {
-        v_reward_index = which.max(q_table[reward_row,"Q"])
-        v_reward = q_table[reward_row,"Q"][[v_reward_index]]
-        example_q = example_q + discount*v_reward
+        example_q = example_q + discount*cum_reward
       }
-      
-      if(new_position == goal || new_position == monster)
+      else
       {
         a=1
+       
       }
       
-      current_q= q_table[current_row, "Q"]
+      expected_reward = 0
+      old_position_index = as.character(old_position)
+      action_index = as.character(action)
+      visited = 60
+      visitedCount = 1
+      if(!is.null(q_table[[old_position_index]]))
+      {
+        if(!is.null(q_table[[old_position_index]][[old_monster_index]]))
+        {
+          if(!is.null(q_table[[old_position_index]][[old_monster_index]][[action_index]]))
+          {
+            node = q_table[[old_position_index]][[old_monster_index]][[action_index]]
+            expected_reward = node[["Q"]]
+            visited = visited + node[["VisitedCount"]]
+            visitedCount = node[["VisitedCount"]] + 1
+          }
+        }
+      }
       
-      visited=60+ as.numeric(q_table[current_row,"VisitedCount"])
+      
       gama = 60/visited
-      new_q= as.numeric(current_q) + as.numeric(gama)*(as.numeric(example_q)-as.numeric(current_q))
-
-      q_table[current_row,"VisitedCount"]=as.numeric(q_table[current_row,"VisitedCount"])+1
-      q_table[current_row, "Q"] = new_q
-      q_table[current_row, "Monster"] = monster 
+      new_q= as.numeric(expected_reward) + as.numeric(gama)*(as.numeric(example_q)-as.numeric(expected_reward))
+      
+      if(is.null(q_table[[old_position_index]]))
+      {
+        q_table[[old_position_index]] = list()
+      }
+      
+      current_node = q_table[[old_position_index]]
+      
+      
+      if(is.null(current_node[[old_monster_index]]))
+      {
+        q_table[[old_position_index]][[old_monster_index]] = list()
+      }
+      
+      action_node = q_table[[old_position_index]][[old_monster_index]]
+      if(is.null(action_node[[action_index]]))
+      {
+        q_table[[old_position_index]][[old_monster_index]][[action_index]]=list()
+      }
+      
+      current = q_table[[old_position_index]][[old_monster_index]][[action_index]]
+      current[["VisitedCount"]]=visitedCount
+      current[["Q"]] = new_q
+      q_table[[old_position_index]][[old_monster_index]][[action_index]] = current
+      
       cont$q_table = q_table
     }
     
