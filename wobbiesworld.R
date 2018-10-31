@@ -20,16 +20,17 @@ makeController=function(maze){
     
     rand = runif(1, 0, 1)
     
+    actions = supported_actions(maze_)
     if(cont$doRand)
     {
-      move = sample(c(2,4,6,8),1)
+      move = sample(actions,1)
     }
     else
     {
       move = 5
     }
 
-    if(cont$doRand ==F || rand > 0.6)
+    if(cont$doRand ==F || rand > 0.2)
     {
       if(!is.null(q_table[[old_position_index]]))
       {
@@ -145,6 +146,26 @@ makeController=function(maze){
   
   
   list(decideAction=decideAction,update=update,doRand=TRUE)
+}
+
+supported_actions = function(maze)
+{
+  actions = c()
+  inMaze=function(loc){
+    length(which(maze$maze$x==loc[1] & maze$maze$y==loc[2]))==1
+  }
+  oldX=wobbieX=maze$wobbie[1]
+  oldY=wobbieY=maze$wobbie[2]
+  if (inMaze(c(oldX-1,oldY)))
+    actions = append(actions, 4)
+  if (inMaze(c(oldX+1,oldY)))
+    actions = append(actions, 6)
+  if (inMaze(c(oldX,oldY-1)))
+    actions = append(actions, 2)
+  if (inMaze(c(oldX,oldY+1)))
+    actions = append(actions, 8)
+  
+  return (actions)
 }
 
 #' runWW

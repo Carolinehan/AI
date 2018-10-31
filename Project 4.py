@@ -11,7 +11,7 @@ from keras.datasets import cifar10
 from keras.utils import np_utils
 from keras import backend as K
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, Flatten
+from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, Flatten,GlobalMaxPooling2D
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
@@ -25,31 +25,45 @@ if K.backend()=='tensorflow':
 def myGetModel(data):
   model = Sequential()
   model.add(Conv2D(32, (3, 3),padding='same', activation='relu', input_shape=data.input_dim))
-  model.add(Dropout(0.5))
   model.add(Conv2D(32, (3, 3),padding='same', activation='relu'))
+  model.add(Conv2D(32, (3, 3),padding='same', activation='relu'))
+  model.add(Conv2D(48, (3, 3),padding='same', activation='relu'))
+  model.add(Conv2D(48, (3, 3),padding='same', activation='relu'))
   model.add(MaxPooling2D(pool_size=(2, 2)))
   model.add(Dropout(0.25))
 
-  model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
-  model.add(Dropout(0.5))
-  model.add(Conv2D(64, (3, 3), activation='relu'))
+  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
   model.add(MaxPooling2D(pool_size=(2, 2)))
   model.add(Dropout(0.25))
+  
+  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+  model.add(GlobalMaxPooling2D())
+  model.add(Dropout(0.25))
 
-  model.add(Flatten())
-  model.add(Dense(64, activation='relu'))
-  model.add(Dropout(0.5))
+ 
+  model.add(Dense(500, activation='relu'))
+  model.add(Dropout(0.25))
   model.add(Dense(data.num_classes, activation='softmax'))
   
-  sgd = optimizers.SGD(lr=0.1, decay=1e-6)
+  sgd = optimizers.Adam(lr=0.0001)
   model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['accuracy'])
   return model
 
 def myFitModel(model, data):
-  EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
-  checkpointer = ModelCheckpoint(filepath='weights-best.hdf5', verbose=1, save_best_only=True)
+  earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+  checkpointer = ModelCheckpoint(filepath='weights-best.hdf5', verbose=1, save_best_only=True, save_weights_only=True)
+  callback = [checkpointer,earlystop]
   model.fit(data.x_train, data.y_train,
-          batch_size=1000, epochs=100,
+          batch_size=100, epochs=100,
+          callbacks = callback,
           validation_data=(data.x_valid, data.y_valid))
   
   model.load_weights('weights-best.hdf5')
