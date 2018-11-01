@@ -11,8 +11,9 @@ from keras.datasets import cifar10
 from keras.utils import np_utils
 from keras import backend as K
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, Flatten,GlobalMaxPooling2D
+from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, Flatten,GlobalMaxPooling2D,BatchNormalization
 from keras import optimizers
+from keras import regularizers
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
 # Here we just make sure the image format is as desired. This will make the feature (x)
@@ -20,37 +21,34 @@ from keras.callbacks import EarlyStopping
 if K.backend()=='tensorflow':
     K.set_image_dim_ordering("th")
   
-  
+weight_decay = 1e-4  
   
 def myGetModel(data):
   model = Sequential()
-  model.add(Conv2D(32, (3, 3),padding='same', activation='relu', input_shape=data.input_dim))
-  model.add(Conv2D(32, (3, 3),padding='same', activation='relu'))
-  model.add(Conv2D(32, (3, 3),padding='same', activation='relu'))
-  model.add(Conv2D(48, (3, 3),padding='same', activation='relu'))
-  model.add(Conv2D(48, (3, 3),padding='same', activation='relu'))
+  model.add(Conv2D(32, (3, 3),padding='same', activation='relu',kernel_regularizer=regularizers.l2(weight_decay), input_shape=data.input_dim))
+  model.add(BatchNormalization())
+  model.add(Conv2D(32, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
+  model.add(Conv2D(32, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
   model.add(MaxPooling2D(pool_size=(2, 2)))
-  model.add(Dropout(0.25))
+  model.add(Dropout(0.3))
 
-  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(80, (3, 3), padding='same', activation='relu'))
+  model.add(Conv2D(64, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
+  model.add(Conv2D(64, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
   model.add(MaxPooling2D(pool_size=(2, 2)))
   model.add(Dropout(0.25))
   
-  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-  model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-  model.add(GlobalMaxPooling2D())
+  model.add(Conv2D(128, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
+  model.add(Conv2D(128, (3, 3),padding='same',kernel_regularizer=regularizers.l2(weight_decay), activation='relu'))
+  model.add(BatchNormalization())
+  model.add(MaxPooling2D(pool_size=(2, 2)))
   model.add(Dropout(0.25))
 
- 
-  model.add(Dense(500, activation='relu'))
-  model.add(Dropout(0.25))
+  model.add(Flatten())
   model.add(Dense(data.num_classes, activation='softmax'))
   
   sgd = optimizers.Adam(lr=0.0001)
@@ -58,7 +56,7 @@ def myGetModel(data):
   return model
 
 def myFitModel(model, data):
-  earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+  earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
   checkpointer = ModelCheckpoint(filepath='weights-best.hdf5', verbose=1, save_best_only=True, save_weights_only=True)
   callback = [checkpointer,earlystop]
   model.fit(data.x_train, data.y_train,

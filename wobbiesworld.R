@@ -20,17 +20,16 @@ makeController=function(maze){
     
     rand = runif(1, 0, 1)
     
-    actions = supported_actions(maze_)
     if(cont$doRand)
     {
-      move = sample(actions,1)
+      move = sample(c(2,4,6,8),1)
     }
     else
     {
       move = 5
     }
 
-    if(cont$doRand ==F || rand > 0.2)
+    if(cont$doRand ==F || rand > 0.7)
     {
       if(!is.null(q_table[[old_position_index]]))
       {
@@ -84,16 +83,11 @@ makeController=function(maze){
       {
         example_q = example_q + discount*cum_reward
       }
-      else
-      {
-        a=1
-       
-      }
       
       expected_reward = 0
       old_position_index = as.character(old_position)
       action_index = as.character(action)
-      visited = 60
+      visited = 50
       visitedCount = 1
       if(!is.null(q_table[[old_position_index]]))
       {
@@ -110,7 +104,7 @@ makeController=function(maze){
       }
       
       
-      gama = 60/visited
+      gama = 50/visited
       new_q= as.numeric(expected_reward) + as.numeric(gama)*(as.numeric(example_q)-as.numeric(expected_reward))
       
       if(is.null(q_table[[old_position_index]]))
@@ -148,25 +142,6 @@ makeController=function(maze){
   list(decideAction=decideAction,update=update,doRand=TRUE)
 }
 
-supported_actions = function(maze)
-{
-  actions = c()
-  inMaze=function(loc){
-    length(which(maze$maze$x==loc[1] & maze$maze$y==loc[2]))==1
-  }
-  oldX=wobbieX=maze$wobbie[1]
-  oldY=wobbieY=maze$wobbie[2]
-  if (inMaze(c(oldX-1,oldY)))
-    actions = append(actions, 4)
-  if (inMaze(c(oldX+1,oldY)))
-    actions = append(actions, 6)
-  if (inMaze(c(oldX,oldY-1)))
-    actions = append(actions, 2)
-  if (inMaze(c(oldX,oldY+1)))
-    actions = append(actions, 8)
-  
-  return (actions)
-}
 
 #' runWW
 #'
@@ -313,7 +288,6 @@ learn=function(
     score=c(score,res$score)
     turns=c(turns,res$turn)
     control=res$control
-    #print(control$q_table)
     if (doPlot && i%%every == 0) {
       if (plotStarted) {
         points(i/every,mean(score[(i-every):i]),col=col)

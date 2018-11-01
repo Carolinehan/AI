@@ -93,7 +93,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
     else if(length(m) <2)
     {
-        moveInfo$moves = c(m[1], 0)
+      moveInfo$moves = c(m[1], 0)
     }
     else
     {
@@ -108,6 +108,7 @@ myFunction = function(moveInfo,readings,positions,edges,probs) {
     }
   }
   moveInfo$mem$goal = goal
+  moveInfo$mem$previous = current_position
   moveInfo$mem$initia = normalizeF
   return(moveInfo)
 }
@@ -170,6 +171,14 @@ initialMatrix=function(positions, edges, moveInfo, reset){
       {
         initial_state[1, moveInfo$moves[1]] = 0
       }
+      
+      if(moveInfo$moves[1] == 0)
+      {
+        if(!is.null(moveInfo$mem$previous))
+        {
+          initial_state[1, moveInfo$mem$previous] = 0
+        }
+      }
     }
   }
   
@@ -212,9 +221,9 @@ cost = function(normalizedF, node)
   h_values = orders[node]
   if(h_values < 4)
   {
-   return (h_values/10)
+    return (h_values/10)
   }
-
+  
   return(0.6)
 }
 
