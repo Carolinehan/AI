@@ -1,53 +1,3 @@
-#' randomWC
-#'
-#' Control function for Where's Croc where moves are random.
-#' @param moveInfo See runWheresCroc for details
-#' @param readings See runWheresCroc for details
-#' @param positions See runWheresCroc for details
-#' @param edges See runWheresCroc for details
-#' @param probs See runWheresCroc for details
-#' @return See runWheresCroc for details
-#' @export
-randomWC=function(moveInfo,readings,positions,edges,probs) {
-  moveInfo$moves=c(sample(getOptions(positions[3],edges),1),0)
-  return(moveInfo)
-}
-
-#' manualWC
-#'
-#' Control function for Where's Croc that allows manual play using keyboard.
-#' @param moveInfo See runWheresCroc for details
-#' @param readings See runWheresCroc for details
-#' @param positions See runWheresCroc for details
-#' @param edges See runWheresCroc for details
-#' @param probs See runWheresCroc for details
-#' @return See runWheresCroc for details
-#' @export
-manualWC=function(moveInfo,readings,positions,edges,probs) {
-  options=getOptions(positions[3],edges)
-  print("Move 1 options (plus 0 for search):")
-  print(options)
-  mv1=readline("Move 1: ")
-  if (mv1=="q") {stop()}
-  if (!mv1 %in% options && mv1 != 0) {
-    warning ("Invalid move. Search ('0') specified.")
-    mv1=0
-  }
-  if (mv1!=0) {
-    options=getOptions(mv1,edges)
-  }
-  print("Move 2 options (plus 0 for search):")
-  print(options)
-  mv2=readline("Move 2: ")
-  if (mv2=="q") {stop()}
-  if (!mv1 %in% options && mv1 != 0) {
-    warning ("Invalid move. Search ('0') specified.")
-    mv2=0
-  }
-  moveInfo$moves=c(mv1,mv2)
-  return(moveInfo)
-}
-
 myFunction = function(moveInfo,readings,positions,edges,probs) {
   reset = F
   if(!is.null(moveInfo$mem$status))
@@ -219,12 +169,12 @@ cost = function(normalizedF, node)
 {
   orders = abs(rank(normalizedF)-41)
   h_values = orders[node]
-  if(h_values < 4)
+  if(h_values < 5)
   {
     return (h_values/10)
   }
   
-  return(0.6)
+  return(1)
 }
 
 AStar = function(current,edges,goal,normalizedF)
@@ -292,6 +242,56 @@ AStar = function(current,edges,goal,normalizedF)
   return (FALSE)
 }
 
+#' randomWC
+#'
+#' Control function for Where's Croc where moves are random.
+#' @param moveInfo See runWheresCroc for details
+#' @param readings See runWheresCroc for details
+#' @param positions See runWheresCroc for details
+#' @param edges See runWheresCroc for details
+#' @param probs See runWheresCroc for details
+#' @return See runWheresCroc for details
+#' @export
+randomWC=function(moveInfo,readings,positions,edges,probs) {
+  moveInfo$moves=c(sample(getOptions(positions[3],edges),1),0)
+  return(moveInfo)
+}
+
+#' manualWC
+#'
+#' Control function for Where's Croc that allows manual play using keyboard.
+#' @param moveInfo See runWheresCroc for details
+#' @param readings See runWheresCroc for details
+#' @param positions See runWheresCroc for details
+#' @param edges See runWheresCroc for details
+#' @param probs See runWheresCroc for details
+#' @return See runWheresCroc for details
+#' @export
+manualWC=function(moveInfo,readings,positions,edges,probs) {
+  options=getOptions(positions[3],edges)
+  print("Move 1 options (plus 0 for search):")
+  print(options)
+  mv1=readline("Move 1: ")
+  if (mv1=="q") {stop()}
+  if (!mv1 %in% options && mv1 != 0) {
+    warning ("Invalid move. Search ('0') specified.")
+    mv1=0
+  }
+  if (mv1!=0) {
+    options=getOptions(mv1,edges)
+  }
+  print("Move 2 options (plus 0 for search):")
+  print(options)
+  mv2=readline("Move 2: ")
+  if (mv2=="q") {stop()}
+  if (!mv1 %in% options && mv1 != 0) {
+    warning ("Invalid move. Search ('0') specified.")
+    mv2=0
+  }
+  moveInfo$moves=c(mv1,mv2)
+  return(moveInfo)
+}
+
 #' testWC
 #'
 #' Use this to debug under multiple circumstances and to see how your function compares with the par function
@@ -308,19 +308,25 @@ AStar = function(current,edges,goal,normalizedF)
 #' The par function takes approximately 3.85 seconds on my laptop. If it takes longer than 30 seconds on the
 #' evaluation machine, the time limit will be increased so as to be 25% slower than the par function.
 #'
+#' The mem (memory) object you use in the function you create (see the runWheresCroc documentation)
+#' is passed from game to game. This is so you can reuse whatever you set up there to quickly work out
+#' what moves to make in different situations. Note that it contains a status field that can be used to work out
+#' when a game ends and a new game begins. See the runWheresCroc documentation for more details.
+#'
 #' @param myFunction Your function to be passed to runWheresCroc. See runWheresCroc documentation for details.
 #' @param verbose Set to 0 for no output, 1 for a summary of the results of the games played (mean,
 #' standard deviation and time taken), and 2 for the above plus written output detailing seeds used and the
 #' runWheresCroc output of the result of each game.
 #' @param returnVec See return value.
+#' @param n The number of games to run. In the evaluation this will be 500.
 #' @param seed The random seed to use. Pass NA to not set a random seed.
 #' @param timeLimit The time limit. If this is breached, a NA is returned.
 #' @return If your function is too slow, NA is returned. Otherwise if returnVec is TRUE, a vector containing
 #' all results is returned. If returnVec is FALSE, the average performance is returned.
 #' @export
-testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
-  set.seed(21)
-  seeds=sample(1:25000,500)
+testWC=function(myFunction,verbose=0,returnVec=FALSE,n=500,seed=21,timeLimit=300){
+  set.seed(seed)
+  seeds=sample(1:25000,n)
   startTime=Sys.time()
   mem=NA
   hmm=c()
@@ -331,18 +337,11 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
       return (NA)
     }
     set.seed(s)
-    
+    if (verbose==2)
+      cat("\nNew game, seed",s)
     res=runWheresCroc(myFunction,doPlot=F,pause=0,verbose=verbose==2,returnMem=T,mem=mem)
     mem=res$mem
     hmm=c(hmm,res$move)
-    if (verbose==2)
-    {
-      if(res$move > 10)
-      {
-        cat("\nNew game, seed",s)
-        cat("\n turns: ", res$move)
-      }
-    }
   }
   if (verbose>=1) {
     endTime=Sys.time()
@@ -409,8 +408,7 @@ testWC=function(myFunction,verbose=0,returnVec=FALSE,seed=21,timeLimit=300){
 #' expensive initial setups of the transition matrix and routing informing.
 #' @return A string describing the outcome of the game.
 #' @export
-runWheresCroc=function(makeMoves,doPlot=T,showCroc=T,pause=1,verbose=T,returnMem=F,mem=NA) {
-  #set.seed(17859)
+runWheresCroc=function(makeMoves,doPlot=T,showCroc=F,pause=1,verbose=T,returnMem=F,mem=NA) {
   positions=sample(1:40,4) # Croc, BP1, BP2, Player
   points=getPoints()
   edges=getEdges()

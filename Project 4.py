@@ -15,7 +15,7 @@ from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, Flatten,GlobalMax
 from keras import optimizers
 from keras import regularizers
 from keras.callbacks import ModelCheckpoint
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, LearningRateScheduler
 # Here we just make sure the image format is as desired. This will make the feature (x)
 # data - i.e. the RGB pixel values - for each image have the shape 3x32x32.
 if K.backend()=='tensorflow':
@@ -51,16 +51,22 @@ def myGetModel(data):
   model.add(Flatten())
   model.add(Dense(data.num_classes, activation='softmax'))
   
-  sgd = optimizers.Adam(lr=0.0001)
+  sgd = optimizers.rmsprop(lr=0.001,decay=1e-6)
   model.compile(loss='categorical_crossentropy', optimizer=sgd,metrics=['accuracy'])
   return model
 
+def learningrate_schedule(epoch):
+  learning_rate = 0.001
+   
+  return learning_rate
+
 def myFitModel(model, data):
-  earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
+  earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
   checkpointer = ModelCheckpoint(filepath='weights-best.hdf5', verbose=1, save_best_only=True, save_weights_only=True)
-  callback = [checkpointer,earlystop]
+  learningrate = LearningRateScheduler(learningrate_schedule)
+  callback = [checkpointer,earlystop,learningrate]
   model.fit(data.x_train, data.y_train,
-          batch_size=100, epochs=100,
+          batch_size=64, epochs=100,
           callbacks = callback,
           validation_data=(data.x_valid, data.y_valid))
   

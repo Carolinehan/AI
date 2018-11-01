@@ -282,7 +282,6 @@ learn=function(
   turns=c()
   for (i in 1:n) {
     res=runGame(maze,control)
-    
     if (verbose)
       cat("\nRun:",i," Turn:",res$turn," Score:",res$score)
     score=c(score,res$score)
@@ -338,7 +337,6 @@ makeRandomController=function(maze){
   update=function(cont,maze_) {
     return (cont)
   }
-  
-  print(maze)
   list(decideAction=decideAction,update=update,doRand=TRUE)
 }
+

@@ -1,59 +1,62 @@
-#' dumbDM
-#'
-#' This control function just moves randomly, until all packages are picked up and delivered by accident!
-#' @param roads See help documentation for the runDeliveryMan function
-#' @param cars See help documentation for the runDeliveryMan function
-#' @param packages See help documentation for the runDeliveryMan function
-#' @return See help documentation for the runDeliveryMan function
-#' @export
-dumbDM=function(roads,car,packages){
-  car$nextMove=sample(c(2,4,6,8),1)
-  return (car)
-}
-#' basicDM
-#'
-#' This control function will pick up the closest package (using distance and ignoring traffic).
-#' As a first step, you should make sure you do better than this.
-#' @param roads See help documentation for the runDeliveryMan function
-#' @param cars See help documentation for the runDeliveryMan function
-#' @param packages See help documentation for the runDeliveryMan function
-#' @return See help documentation for the runDeliveryMan function
-#' @export
-basicDM=function(roads,car,packages) {
+myFunction = function(roads, car, packages) {
   nextMove=0
   toGo=0
   offset=0
-  if (car$load==0) {
-    toGo=which(packages[,5]==0)[1]
-  } else {
-    toGo=car$load
-    offset=2
+  car = astarAllPackage(roads, car, packages)
+  toGo = car$mem$package
+  offset = car$mem$offset
+  
+  x2 = packages[toGo, offset + 1]
+  y2= packages[toGo, offset + 2]
+  
+  
+  if(car$x == x2 && car$y == y2)
+  {
+    car$nextMove = 5
+    car$mem = list()
+    car$mem$prevNode = list(x=car$x,y=car$y)
+    return(car)
   }
-  if (car$x<packages[toGo,1+offset]) {nextMove=6}
-  else if (car$x>packages[toGo,1+offset]) {nextMove=4}
-  else if (car$y<packages[toGo,2+offset]) {nextMove=8}
-  else if (car$y>packages[toGo,2+offset]) {nextMove=2}
-  else {nextMove=5}
+  
+  nextPath = aStar(car$x, car$y, x2, y2, roads,car)
+  path = nextPath$nextNode
+  x= floor((path-1) / 10) + 1
+  y= (path - 1) %% 10 + 1
+  #2 down, 4 left, 6 right, 8 up, 5 stay still
+  
+  bottleNeck = 4
+  if (car$x == x && car$y != y) {
+    if(car$y < y) {
+      nextMove = 8
+    }
+    else if(car$y > y) {
+      nextMove = 2
+      
+    }
+  }
+  else if(car$y == y && car$x != x) {
+    if(car$x < x) {
+      
+      nextMove = 6
+    }
+    else if(car$x > x) {
+      
+      nextMove = 4
+    }
+  }
+  else
+  {
+    nextMove = 5;
+    print(car$x, car$y, x,y)
+    print("................")
+  }
   car$nextMove=nextMove
-  car$mem=list()
-  return (car)
-}
-#' manualDM
-#'
-#' If you have the urge to play the game manually (giving moves 2, 4, 5, 6, or 8 using the keyboard) you
-#' can pass this control function to runDeliveryMan
-#' @param roads See help documentation for the runDeliveryMan function
-#' @param cars See help documentation for the runDeliveryMan function
-#' @param packages See help documentation for the runDeliveryMan function
-#' @return See help documentation for the runDeliveryMan function
-#' @export
-manualDM=function(roads,car,packages) {
-  if (car$load>0) {
-    print(paste("Current load:",car$load))
-    print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
+  if(x == x2 && y ==y2)
+  {
+    car$mem=list()
   }
-  car$nextMove=readline("Enter next move. Valid moves are 2,4,6,8,0 (directions as on keypad) or q for quit.")
-  if (car$nextMove=="q") {stop("Game terminated on user request.")}
+  
+  car$mem$prevNode = list(x=car$x,y=car$y)
   return (car)
 }
 
@@ -360,65 +363,64 @@ astarAllPackage = function(roads, car, packages) {
   return (car)
 }
 
-myFunction = function(roads, car, packages) {
+
+
+#' dumbDM
+#'
+#' This control function just moves randomly, until all packages are picked up and delivered by accident!
+#' @param roads See help documentation for the runDeliveryMan function
+#' @param cars See help documentation for the runDeliveryMan function
+#' @param packages See help documentation for the runDeliveryMan function
+#' @return See help documentation for the runDeliveryMan function
+#' @export
+dumbDM=function(roads,car,packages){
+  car$nextMove=sample(c(2,4,6,8),1)
+  return (car)
+}
+#' basicDM
+#'
+#' This control function will pick up the closest package (using distance and ignoring traffic).
+#' As a first step, you should make sure you do better than this.
+#' @param roads See help documentation for the runDeliveryMan function
+#' @param cars See help documentation for the runDeliveryMan function
+#' @param packages See help documentation for the runDeliveryMan function
+#' @return See help documentation for the runDeliveryMan function
+#' @export
+basicDM=function(roads,car,packages) {
   nextMove=0
   toGo=0
   offset=0
-  car = astarAllPackage(roads, car, packages)
-  toGo = car$mem$package
-  offset = car$mem$offset
-
-  x2 = packages[toGo, offset + 1]
-  y2= packages[toGo, offset + 2]
-  
-  
-  if(car$x == x2 && car$y == y2)
-  {
-    car$nextMove = 5
-    car$mem = list()
-    car$mem$prevNode = list(x=car$x,y=car$y)
-    return(car)
+  if (car$load==0) {
+    toGo=which(packages[,5]==0)[1]
+  } else {
+    toGo=car$load
+    offset=2
   }
-  
-  nextPath = aStar(car$x, car$y, x2, y2, roads,car)
-  path = nextPath$nextNode
-  x= floor((path-1) / 10) + 1
-  y= (path - 1) %% 10 + 1
-  #2 down, 4 left, 6 right, 8 up, 5 stay still
-  
-  bottleNeck = 4
-  if (car$x == x && car$y != y) {
-    if(car$y < y) {
-        nextMove = 8
-    }
-    else if(car$y > y) {
-        nextMove = 2
-      
-    }
-  }
-  else if(car$y == y && car$x != x) {
-    if(car$x < x) {
-      
-        nextMove = 6
-    }
-    else if(car$x > x) {
-
-        nextMove = 4
-    }
-  }
-  else
-  {
-    nextMove = 5;
-    print(car$x, car$y, x,y)
-    print("................")
-  }
+  if (car$x<packages[toGo,1+offset]) {nextMove=6}
+  else if (car$x>packages[toGo,1+offset]) {nextMove=4}
+  else if (car$y<packages[toGo,2+offset]) {nextMove=8}
+  else if (car$y>packages[toGo,2+offset]) {nextMove=2}
+  else {nextMove=5}
   car$nextMove=nextMove
-  if(x == x2 && y ==y2)
-  {
-    car$mem=list()
+  car$mem=list()
+  return (car)
+}
+#' manualDM
+#'
+#' If you have the urge to play the game manually (giving moves 2, 4, 5, 6, or 8 using the keyboard) you
+#' can pass this control function to runDeliveryMan
+#' @param roads See help documentation for the runDeliveryMan function
+#' @param cars See help documentation for the runDeliveryMan function
+#' @param packages See help documentation for the runDeliveryMan function
+#' @return See help documentation for the runDeliveryMan function
+#' @export
+manualDM=function(roads,car,packages) {
+  if (car$load>0) {
+    print(paste("Current load:",car$load))
+    print(paste("Destination: X",packages[car$load,3],"Y",packages[car$load,4]))
   }
-  
-  car$mem$prevNode = list(x=car$x,y=car$y)
+  car$nextMove=readline("Enter next move. Valid moves are 2,4,6,8,0 (directions as on keypad) or q for quit.")
+  if (car$nextMove=="q") {stop("Game terminated on user request.")}
   return (car)
 }
 
@@ -462,12 +464,8 @@ testDM=function(myFunction,verbose=0,returnVec=FALSE,n=500,seed=21,timeLimit=250
     }
     set.seed(s)
     if (verbose==2)
-    {
       cat("\nNew game, seed",s)
-    }
-    steps = runDeliveryMan(myFunction,doPlot=F,pause=0,verbose=verbose==2)
-    return (steps)
-    
+    runDeliveryMan(myFunction,doPlot=F,pause=0,verbose=verbose==2)
   })
   endTime=Sys.time()
   if (verbose>=1){
@@ -517,7 +515,6 @@ testDM=function(myFunction,verbose=0,returnVec=FALSE,n=500,seed=21,timeLimit=250
 #' @export
 runDeliveryMan <- function (carReady=manualDM,dim=10,turns=2000,
                             doPlot=T,pause=0.1,del=5,verbose=T) {
- # set.seed(4611)
   roads=makeRoadMatrices(dim)
   car=list(x=1,y=1,wait=0,load=0,nextMove=NA,mem=list())
   packages=matrix(sample(1:dim,replace=T,5*del),ncol=5)

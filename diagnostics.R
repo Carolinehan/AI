@@ -418,6 +418,20 @@ getColProb =function(name, model, case,network)
   return (subProb)
 }
 
+# Pnuemonia [T,F] -> X_Ray, Temperature
+# Temperature [Normal]
+
+# Visited_TB_Spot [T,F] -> Tuberculosis
+# Tuberculosis [T,F] -> X_Ray
+#
+# Smokes [T,F] -> Lung_Cancer, Bronchitis
+# Lung_Cancer [T,F] -> X_Ray, Dyspnea
+# Bronchitis [T,F] -> Dyspnea
+#
+# X_Ray : [T,F]
+# Dyspnea (Shortness of Breath): [T,F]
+
+
 #' runDiagnostics
 #'
 #' The run function for the diagnostics project. You need to pass the two functions indicated in the parameters.
@@ -568,3 +582,4 @@ Get_Cases_Mikes_Model_5000=function(){
   rownames(out)=1:10
   return(out)
 }
+
